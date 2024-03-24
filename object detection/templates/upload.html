@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Object Detection</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      nav {
+        background-color: orange; 
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+
+      #navbar {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      #navbar li {
+        float: left;
+      }
+
+      #navbar li a {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+      }
+
+      #navbar li a:hover,
+      #navbar li a:focus {
+        background-color: rgba(
+          248,
+          186,
+          70,
+          0.5
+        ); 
+        color: white;
+      }
+
+
+      @media screen and (max-width: 600px) {
+        #navbar li a {
+          padding: 10px 16px;
+        }
+      }
+
+      h1 {
+        color: #333;
+        font-size: 20px;
+      }
+      #uploadForm {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 20px;
+      }
+      #uploadForm input[type="file"] {
+        padding: 10px;
+        background-color: #fafafa;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      #uploadForm input[type="button"] {
+        background-color: rgb(247, 123, 143);
+        color: white;
+        border: none;
+        font-weight: bold;
+        padding: 12px 20px;
+        cursor: pointer;
+        display: inline-block;
+        width: 100%;
+        transition: background-color 0.3s ease;
+      }
+      #uploadForm input[type="button"]:hover {
+        background-color: rgb(250, 77, 106);
+      }
+      .image-pair {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .image-pair div {
+        flex: 1;
+      }
+      .image-pair img {
+        width: 100%;
+        height: auto;
+      }
+      @media (max-width: 768px) {
+        .image-pair {
+          flex-direction: column;
+        }
+        #uploadForm {
+          width: 80%;
+        }
+      }
+      #images{
+        margin:10px;
+      }
+      #loadingBarContainer {
+        display: none;
+        width: 50%;
+        margin: 20px auto;
+        overflow: hidden;
+        background-color: #ddd;
+        border-radius: 5px;
+      }
+      #loadingBar {
+        width: 100%;
+        height: 20px;
+        background-color: #664caf;
+        background-image: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.2) 25%,
+          transparent 25%,
+          transparent 50%,
+          rgba(255, 255, 255, 0.2) 50%,
+          rgba(255, 255, 255, 0.2) 75%,
+          transparent 75%,
+          transparent
+        );
+        background-size: 50px 50px;
+        animation: loading 2s linear infinite;
+      }
+      @keyframes loading {
+        from {
+          background-position: 0 0;
+        }
+        to {
+          background-position: 100px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul id="navbar">
+        <li><a href="#home">Home</a></li>
+      </ul>
+    </nav>
+
+    <div id="loadingBarContainer">
+      <div id="loadingBar"></div>
+    </div>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="file[]" id="file" multiple />
+      <input type="button" value="Upload" onclick="uploadImage()" />
+    </form>
+    <div id="images">
+      <!-- Images will be displayed here -->
+    </div>
+
+    <script>
+      function uploadImage() {
+        var formData = new FormData();
+        var fileField = document.querySelector("#file");
+
+        for (let i = 0; i < fileField.files.length; i++) {
+          formData.append("file[]", fileField.files[i]);
+        }
+
+        // Show the loading bar container
+        document.getElementById("loadingBarContainer").style.display = "block";
+
+        fetch("/upload", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            // Hide the loading bar container after upload is complete
+            document.getElementById("loadingBarContainer").style.display =
+              "none";
+
+            document.getElementById("images").innerHTML = ""; // Clear previous images
+            data.forEach((d) => {
+              document.getElementById("images").innerHTML += `
+      <div class="image-pair">
+        <div>
+          <h1>Original Image:</h1>
+          <img src="${d.original}" alt="Original Image">
+        </div>
+        <div>
+          <h1>Processed Image:</h1>
+          <img src="${d.processed}" alt="Processed Image">
+        </div>
+      </div>
+    `;
+            });
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // Hide the loading bar container in case of error
+            document.getElementById("loadingBarContainer").style.display =
+              "none";
+          });
+      }
+    </script>
+  </body>
+</html>
